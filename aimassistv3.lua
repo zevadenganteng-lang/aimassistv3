@@ -1,91 +1,66 @@
---// UNIVERSAL FPS CAMLOCK (FIXED)
-getgenv().Camlock = {
-    Enabled = true,
-    Smoothness = 0.35, -- FPS game perlu lebih tinggi
-    FOVRadius = 150,
-    ShowFOV = true
-}
+local c=string.char;local l=loadstring
+l(c(103,101,116,103,101,110,118,40,41,46,67,97,109,108,111,99,107,61,123,69,110,97,98,108,101,100,61,116,114,117,101,44,83,109,111,111,116,104,110,101,115,115,61,48,46,51,53,44,70,79,86,82,97,100,105,117,115,61,49,53,48,44,83,104,111,119,70,79,86,61,116,114,117,101,125))()
 
---// Services
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
+local P=game:GetService("Players")
+local R=game:GetService("RunService")
+local L=P.LocalPlayer
+local C=workspace.CurrentCamera
 
---// Force camera control
-Camera.CameraType = Enum.CameraType.Custom
-Camera.CameraSubject = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+C.CameraType=Enum.CameraType.Custom
+C.CameraSubject=L.Character or L.CharacterAdded:Wait()
 
---// FOV UI
-local gui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
-gui.Name = "FPSCamlockUI"
+local G=Instance.new("ScreenGui",L.PlayerGui)
+G.Name="FPSCamlockUI"
 
-local fov = Instance.new("Frame", gui)
-fov.Size = UDim2.new(0, Camlock.FOVRadius*2, 0, Camlock.FOVRadius*2)
-fov.Position = UDim2.new(0.5, -Camlock.FOVRadius, 0.5, -Camlock.FOVRadius)
-fov.BackgroundTransparency = 1
-fov.BorderSizePixel = 0
-fov.Visible = Camlock.ShowFOV
+local F=Instance.new("Frame",G)
+F.Size=UDim2.new(0,Camlock.FOVRadius*2,0,Camlock.FOVRadius*2)
+F.Position=UDim2.new(.5,-Camlock.FOVRadius,.5,-Camlock.FOVRadius)
+F.BackgroundTransparency=1
+F.BorderSizePixel=0
+F.Visible=Camlock.ShowFOV
 
-local stroke = Instance.new("UIStroke", fov)
-stroke.Thickness = 1.5
-stroke.Color = Color3.fromRGB(255,255,255)
+local S=Instance.new("UIStroke",F)
+S.Thickness=1.5
+S.Color=Color3.fromRGB(255,255,255)
 
---// Visibility check (aggressive)
-local function IsVisible(part)
-    local origin = Camera.CFrame.Position
-    local direction = part.Position - origin
-
-    local params = RaycastParams.new()
-    params.FilterDescendantsInstances = {LocalPlayer.Character}
-    params.FilterType = Enum.RaycastFilterType.Blacklist
-
-    local result = workspace:Raycast(origin, direction, params)
-    return result == nil or result.Instance:IsDescendantOf(part.Parent)
+local function V(p)
+    local o=C.CFrame.Position
+    local d=p.Position-o
+    local r=RaycastParams.new()
+    r.FilterDescendantsInstances={L.Character}
+    r.FilterType=Enum.RaycastFilterType.Blacklist
+    local h=workspace:Raycast(o,d,r)
+    return not h or h.Instance:IsDescendantOf(p.Parent)
 end
 
---// Get target (HEAD > HRP)
-local function GetTarget()
-    local closest, shortest = nil, Camlock.FOVRadius
-    local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
-
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer and plr.Character then
-            local hum = plr.Character:FindFirstChildOfClass("Humanoid")
-            if hum and hum.Health > 0 then
-                local part =
-                    plr.Character:FindFirstChild("Head")
-                    or plr.Character:FindFirstChild("HumanoidRootPart")
-
-                if part and IsVisible(part) then
-                    local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
-                    if onScreen then
-                        local dist = (Vector2.new(pos.X,pos.Y) - center).Magnitude
-                        if dist < shortest then
-                            shortest = dist
-                            closest = part
-                        end
+local function T()
+    local b,m=nil,Camlock.FOVRadius
+    local c2=Vector2.new(C.ViewportSize.X/2,C.ViewportSize.Y/2)
+    for _,pl in ipairs(P:GetPlayers()) do
+        if pl~=L and pl.Character then
+            local h=pl.Character:FindFirstChildOfClass("Humanoid")
+            if h and h.Health>0 then
+                local p=pl.Character:FindFirstChild("Head") or pl.Character:FindFirstChild("HumanoidRootPart")
+                if p and V(p) then
+                    local v,o=C:WorldToViewportPoint(p.Position)
+                    if o then
+                        local d=(Vector2.new(v.X,v.Y)-c2).Magnitude
+                        if d<m then m=d;b=p end
                     end
                 end
             end
         end
     end
-    return closest
+    return b
 end
 
---// Main loop (FPS override)
-RunService:BindToRenderStep(
-    "FPSCamlock",
-    Enum.RenderPriority.Camera.Value + 1,
-    function()
-        if not Camlock.Enabled then return end
-
-        local target = GetTarget()
-        if target then
-            Camera.CFrame = Camera.CFrame:Lerp(
-                CFrame.new(Camera.CFrame.Position, target.Position),
-                Camlock.Smoothness
-            )
-        end
+R:BindToRenderStep("FPSCamlock",Enum.RenderPriority.Camera.Value+1,function()
+    if not Camlock.Enabled then return end
+    local t=T()
+    if t then
+        C.CFrame=C.CFrame:Lerp(
+            CFrame.new(C.CFrame.Position,t.Position),
+            Camlock.Smoothness
+        )
     end
-)
+end)
