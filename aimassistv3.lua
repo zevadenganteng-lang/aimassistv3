@@ -9,6 +9,26 @@ local C=workspace.CurrentCamera
 C.CameraType=Enum.CameraType.Custom
 C.CameraSubject=L.Character or L.CharacterAdded:Wait()
 
+--// POPUP UI
+local PopupGui = Instance.new("ScreenGui", L:WaitForChild("PlayerGui"))
+PopupGui.Name = "MadeByPopup"
+PopupGui.ResetOnSpawn = false
+
+local Text = Instance.new("TextLabel", PopupGui)
+Text.Size = UDim2.new(0, 420, 0, 60)
+Text.Position = UDim2.new(0.5, -210, 0.5, -30)
+Text.BackgroundTransparency = 1
+Text.Text = "MADE BY NTOSZ IN TIKTOK"
+Text.TextColor3 = Color3.fromRGB(255,255,255)
+Text.TextScaled = true
+Text.Font = Enum.Font.GothamBold
+Text.TextStrokeTransparency = 0
+
+task.delay(5, function()
+    PopupGui:Destroy()
+end)
+
+--// FOV UI
 local G=Instance.new("ScreenGui",L.PlayerGui)
 G.Name="FPSCamlockUI"
 
