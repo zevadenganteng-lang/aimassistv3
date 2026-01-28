@@ -43,6 +43,17 @@ do
         if ui then ui:Destroy() end
     end)
 
+    -- /on /off commands
+    lp.Chatted:Connect(function(msg)
+        msg=msg:lower()
+        if msg=="/on" then
+            g().Camlock.Enabled=true
+        elseif msg=="/off" then
+            g().Camlock.Enabled=false
+        end
+    end)
+
+    -- visibility check
     local function vis(p)
         local o=cam.CFrame.Position
         local r=RaycastParams.new()
@@ -52,19 +63,54 @@ do
         return not h or h.Instance:IsDescendantOf(p.Parent)
     end
 
+    -- Da Hood state checks
+    local function isKO(char)
+        local be=char:FindFirstChild("BodyEffects")
+        return be and be:FindFirstChild("K.O") and be["K.O"].Value==true
+    end
+
+    local function isGrabbedOrCarried(char)
+        local be=char:FindFirstChild("BodyEffects")
+        if not be then return false end
+
+        -- grabbed
+        if be:FindFirstChild("Grabbed") and be.Grabbed.Value==true then
+            return true
+        end
+
+        -- being carried (some versions use Carrying)
+        if be:FindFirstChild("Carrying") and be.Carrying.Value==true then
+            return true
+        end
+
+        return false
+    end
+
+    -- target selection
     local function tgt()
         local b,m=nil,cfg[3]
         local sc=Vector2.new(cam.ViewportSize.X/2,cam.ViewportSize.Y/2)
+
         for _,x in ipairs(ps:GetPlayers()) do
             if x~=lp and x.Character then
+                -- skip KO, grabbed, or carried players
+                if isKO(x.Character) or isGrabbedOrCarried(x.Character) then
+                    continue
+                end
+
                 local h=x.Character:FindFirstChildOfClass("Humanoid")
                 if h and h.Health>0 then
-                    local p=x.Character:FindFirstChild("Head") or x.Character:FindFirstChild("HumanoidRootPart")
+                    local p=x.Character:FindFirstChild("Head")
+                        or x.Character:FindFirstChild("HumanoidRootPart")
+
                     if p and vis(p) then
                         local v,o=cam:WorldToViewportPoint(p.Position)
                         if o then
                             local d=(Vector2.new(v.X,v.Y)-sc).Magnitude
-                            if d<m then m=d;b=p end
+                            if d<m then
+                                m=d
+                                b=p
+                            end
                         end
                     end
                 end
@@ -79,10 +125,10 @@ do
         Enum.RenderPriority.Camera.Value+1,
         function()
             if not g().Camlock.Enabled then return end
-            local t=tgt()
-            if t then
+            local tar=tgt()
+            if tar then
                 cam.CFrame=cam.CFrame:Lerp(
-                    CFrame.new(cam.CFrame.Position,t.Position),
+                    CFrame.new(cam.CFrame.Position,tar.Position),
                     cfg[2]
                 )
             end
