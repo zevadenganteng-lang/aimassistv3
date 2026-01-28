@@ -3,10 +3,15 @@ do
     local d,e=b.LocalPlayer,workspace.CurrentCamera
     local f={E=true,S=.45,F=150};getgenv().Camlock=f
 
-    e.CameraType=0
-    e.CameraSubject=d.Character or d.CharacterAdded:Wait()
+    local function A()
+        local ch=d.Character or d.CharacterAdded:Wait()
+        e.CameraType=Enum.CameraType.Custom
+        e.CameraSubject=ch
+    end
+    A()
+    d.CharacterAdded:Connect(A)
 
-    local g=Instance.new("ScreenGui",d.PlayerGui)
+    local g=Instance.new("ScreenGui",d:WaitForChild("PlayerGui"))
     local h=Instance.new("TextLabel",g)
     h.Size=UDim2.new(0,420,0,70)
     h.Position=UDim2.new(.5,-210,.5,-35)
@@ -42,7 +47,7 @@ do
     local function m(n)
         local r=RaycastParams.new()
         r.FilterDescendantsInstances={d.Character}
-        r.FilterType=1
+        r.FilterType=Enum.RaycastFilterType.Blacklist
         local s=workspace:Raycast(e.CFrame.Position,n.Position-e.CFrame.Position,r)
         return not s or s.Instance:IsDescendantOf(n.Parent)
     end
@@ -68,7 +73,7 @@ do
     end
 
     a:BindToRenderStep(
-        string.char(67)..math.random(1e5,9e5),
+        "C"..math.random(1e5,9e5),
         Enum.RenderPriority.Camera.Value+1,
         function()
             if not f.E then return end
