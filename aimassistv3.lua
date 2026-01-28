@@ -1,135 +1,82 @@
 do
-    local g=getgenv
-    local s=string.char
-    local c=table.concat
-    local rs=game:GetService("RunService")
-    local ps=game:GetService("Players")
-    local lp=ps.LocalPlayer
-    local cam=workspace.CurrentCamera
+    local a,b,c=game:GetService("RunService"),game:GetService("Players"),game:GetService("UserInputService")
+    local d,e=b.LocalPlayer,workspace.CurrentCamera
+    local f={E=true,S=.45,F=150};getgenv().Camlock=f
 
-    local cfg={true,0.35,150,true}
-    g().Camlock={
-        Enabled=cfg[1],
-        Smoothness=cfg[2],
-        FOVRadius=cfg[3],
-        ShowFOV=cfg[4]
-    }
+    e.CameraType=0
+    e.CameraSubject=d.Character or d.CharacterAdded:Wait()
 
-    cam.CameraType=Enum.CameraType.Custom
-    cam.CameraSubject=lp.Character or lp.CharacterAdded:Wait()
+    local g=Instance.new("ScreenGui",d.PlayerGui)
+    local h=Instance.new("TextLabel",g)
+    h.Size=UDim2.new(0,420,0,70)
+    h.Position=UDim2.new(.5,-210,.5,-35)
+    h.BackgroundTransparency=1
+    h.Text=string.char(77,65,68,69,32,66,89,32,78,79,84,83,90,10,65,73,77,32,86,51)
+    h.TextScaled=true
+    h.Font=Enum.Font.GothamBold
+    h.TextColor3=Color3.new(1,1,1)
+    h.TextStrokeTransparency=0
+    task.delay(5,function() g:Destroy() end)
 
-    -- popup
-    local ui=Instance.new("ScreenGui",lp:WaitForChild("PlayerGui"))
-    ui.ResetOnSpawn=false
-
-    local t=Instance.new("TextLabel",ui)
-    t.Size=UDim2.new(0,420,0,70)
-    t.Position=UDim2.new(.5,-210,.5,-35)
-    t.BackgroundTransparency=1
-    t.Text=c{
-        s(77),s(65),s(68),s(69),s(32),
-        s(66),s(89),s(32),
-        s(78),s(84),s(79),s(83),s(90),
-        s(32),s(73),s(78),s(32),
-        s(84),s(73),s(75),s(84),s(79),s(75),
-        "\n",s(65),s(73),s(77),s(32),s(86),s(51)
-    }
-    t.TextScaled=true
-    t.Font=Enum.Font.GothamBold
-    t.TextColor3=Color3.new(1,1,1)
-    t.TextStrokeTransparency=0
-
-    task.delay(5,function()
-        if ui then ui:Destroy() end
+    d.Chatted:Connect(function(x)
+        x=x:lower()
+        if x==string.char(47,111,110) then f.E=true
+        elseif x==string.char(47,111,102,102) then f.E=false end
     end)
 
-    -- /on /off commands
-    lp.Chatted:Connect(function(msg)
-        msg=msg:lower()
-        if msg=="/on" then
-            g().Camlock.Enabled=true
-        elseif msg=="/off" then
-            g().Camlock.Enabled=false
+    c.InputBegan:Connect(function(i,p)
+        if not p and i.KeyCode==Enum.KeyCode.Q then
+            f.E=not f.E
         end
     end)
 
-    -- visibility check
-    local function vis(p)
-        local o=cam.CFrame.Position
+    local function j(k)
+        local l=k:FindFirstChild("BodyEffects")
+        return l and (
+            (l:FindFirstChild("K.O") and l["K.O"].Value) or
+            (l:FindFirstChild("Grabbed") and l.Grabbed.Value) or
+            (l:FindFirstChild("Carrying") and l.Carrying.Value)
+        )
+    end
+
+    local function m(n)
         local r=RaycastParams.new()
-        r.FilterDescendantsInstances={lp.Character}
-        r.FilterType=Enum.RaycastFilterType.Blacklist
-        local h=workspace:Raycast(o,p.Position-o,r)
-        return not h or h.Instance:IsDescendantOf(p.Parent)
+        r.FilterDescendantsInstances={d.Character}
+        r.FilterType=1
+        local s=workspace:Raycast(e.CFrame.Position,n.Position-e.CFrame.Position,r)
+        return not s or s.Instance:IsDescendantOf(n.Parent)
     end
 
-    -- Da Hood state checks
-    local function isKO(char)
-        local be=char:FindFirstChild("BodyEffects")
-        return be and be:FindFirstChild("K.O") and be["K.O"].Value==true
-    end
-
-    local function isGrabbedOrCarried(char)
-        local be=char:FindFirstChild("BodyEffects")
-        if not be then return false end
-
-        -- grabbed
-        if be:FindFirstChild("Grabbed") and be.Grabbed.Value==true then
-            return true
-        end
-
-        -- being carried (some versions use Carrying)
-        if be:FindFirstChild("Carrying") and be.Carrying.Value==true then
-            return true
-        end
-
-        return false
-    end
-
-    -- target selection
-    local function tgt()
-        local b,m=nil,cfg[3]
-        local sc=Vector2.new(cam.ViewportSize.X/2,cam.ViewportSize.Y/2)
-
-        for _,x in ipairs(ps:GetPlayers()) do
-            if x~=lp and x.Character then
-                -- skip KO, grabbed, or carried players
-                if isKO(x.Character) or isGrabbedOrCarried(x.Character) then
-                    continue
-                end
-
-                local h=x.Character:FindFirstChildOfClass("Humanoid")
-                if h and h.Health>0 then
-                    local p=x.Character:FindFirstChild("Head")
-                        or x.Character:FindFirstChild("HumanoidRootPart")
-
-                    if p and vis(p) then
-                        local v,o=cam:WorldToViewportPoint(p.Position)
-                        if o then
-                            local d=(Vector2.new(v.X,v.Y)-sc).Magnitude
-                            if d<m then
-                                m=d
-                                b=p
-                            end
-                        end
+    local function o()
+        local p,q=nil,f.F
+        local r=Vector2.new(e.ViewportSize.X*.5,e.ViewportSize.Y*.5)
+        for _,s in ipairs(b:GetPlayers()) do
+            local t=s.Character
+            if s~=d and t and not j(t) then
+                local u=t:FindFirstChildOfClass("Humanoid")
+                local v=t:FindFirstChild("Head") or t:FindFirstChild("HumanoidRootPart")
+                if u and u.Health>0 and v and m(v) then
+                    local w,x=e:WorldToViewportPoint(v.Position)
+                    if x then
+                        local y=(Vector2.new(w.X,w.Y)-r).Magnitude
+                        if y<q then q=y;p=v end
                     end
                 end
             end
         end
-        return b
+        return p
     end
 
-    local stepName="C"..math.random(100000,999999)
-    rs:BindToRenderStep(
-        stepName,
+    a:BindToRenderStep(
+        string.char(67)..math.random(1e5,9e5),
         Enum.RenderPriority.Camera.Value+1,
         function()
-            if not g().Camlock.Enabled then return end
-            local tar=tgt()
-            if tar then
-                cam.CFrame=cam.CFrame:Lerp(
-                    CFrame.new(cam.CFrame.Position,tar.Position),
-                    cfg[2]
+            if not f.E then return end
+            local z=o()
+            if z then
+                e.CFrame=e.CFrame:Lerp(
+                    CFrame.new(e.CFrame.Position,z.Position),
+                    f.S
                 )
             end
         end
